@@ -51,86 +51,11 @@
         params = $.extend(defaults, params);
         params.elmtEvents = events;
 
-        return this.each(function(){
-            var obj = $(this),
-                options = params,
-                func,
-                controleOk,
-                method = obj.attr('method');
-
-            if (typeof method == 'undefined' || method == null) {
-                method = 'post';
-            }
-
-            obj.submit(function(event){
-                var data, action;
-
-                if (isFunc(options.beforeCheck)) {
-                    func = options.beforeCheck;
-                    func.call(obj);
-                }
-
-                controleOk = checkForm();
-
-                if (controleOk) {
-                    if (isFunc(options.beforeSubmit)) {
-                        func = options.beforeSubmit;
-                        func.call(obj);
-                    }
-
-                    if (options.ajax !== falsev) {
-                        action  = obj.attr('action');
-                        data    = obj.serialize();
-
-                        $.ajax({
-                            url         : action,
-                            data        : data,
-                            type        : method,
-                            dataType    : 'json',
-                            success     : function(response) {
-                                if (isFunc(options.afterSubmit)) {
-                                    func = options.afterSubmit;
-                                    func.call(obj, response);
-                                }
-                            }
-                        });
-                    }
-                    else
-                        return truev;
-                }
-
-                event.preventDefault();
-                return falsev;
-            });
-
-            if (options.elmtEvents){
-                for (evnt in options.elmtEvents) {
-                    $(options.controlHandler, obj).bind(evnt, options.elmtEvents[evnt]);
-                }
-            }
-
-            function checkForm(){
-                var ok = truev;
-
-                $(options.controlHandler, obj).each(function(){
-                    var func;
-
-                    if(!controleElmt($(this))){
-                        if (ok) {
-                            ok = falsev;
-
-                            if (isFunc(options.ifFirstWrong)) {
-                                func = options.ifFirstWrong;
-                                func.call(obj, $(this));
-                            }
-                        }
-                    }
-                });
-
-                return ok;
-            };
-
-            function controleElmt(elmt){
+        function controleChamp(form, elmt) 
+        {
+            this.form = $(form);
+            this.elmt = $(elmt);
+            this.check = function(){
                 var testdonnee,
                     classes,
                     oblig,
@@ -140,20 +65,20 @@
                     index0,
                     func;
 
-                if (isFunc(options.beforeElmtCheck)) {
-                    func = options.beforeElmtCheck;
-                    func.call(obj, elmt);
+                if (isFunc(params.beforeElmtCheck)) {
+                    func = params.beforeElmtCheck;
+                    func.call(this.form, this.elmt, this);
                 }
 
-                value = elmt.val();
+                value = this.elmt.val();
 
                 testdonnee = truev;
 
-                if(typeof elmt.attr('class') == "undefined") {
+                if(typeof this.elmt.attr('class') === 'undefined') {
                     return truev;
                 }
 
-                classes     = elmt.attr('class').split(' ');
+                classes     = this.elmt.attr('class').split(' ');
                 index0      = $.inArray('form-controle', classes);
 
                 if (classes.length < index0 + 3) {
@@ -167,32 +92,130 @@
                     expcourrante = regularExpressions[typeDonnee];
 
                     if (isFunc(expcourrante)) {
-                        testdonnee = expcourrante.call(obj, value, elmt);
+                        testdonnee = expcourrante.call(this.form, value, this.elmt, this);
                     } else {
                         testdonnee = expcourrante.test(value);
                     }
                 }
 
-                if(testdonnee == falsev){
-                    if (isFunc(options.ifWrong)) {
-                        func = options.ifWrong;
-                        func.call(obj, elmt);
+                if(testdonnee === falsev){
+                    if (isFunc(params.ifWrong)) {
+                        func = params.ifWrong;
+                        func.call(this.form, this.elmt, this);
                     }
 
                     return falsev;
                 }
 
-                if (isFunc(options.ifRight)) {
-                    func = options.ifRight;
-                    func.call(obj, elmt);
+                if (isFunc(params.ifRight)) {
+                    func = params.ifRight;
+                    func.call(this.form, this.elmt, this);
                 }
 
                 return truev;
-            };
+            }
+        }
 
-            function isFunc(func){
-				return $.isFunction(func);
-			};
+        function controleForm(form)
+        {
+            this.form = $(form);
+            this.champs = [];
+            this.init = function(){
+                var self = this;
+                $(params.controlHandler, this.form).each(function(){
+                    self.champs.push(new controleChamp(this.form, this));
+                });                    
+            };
+            this.check = function(){
+                var ok = truev;
+
+                $.each(this.champs, function(ii, thischamp){
+                    var func;
+                    if (!thischamp.check()){
+                        if (ok) {
+                            ok = falsev;
+
+                            if (isFunc(params.ifFirstWrong)) {
+                                func = params.ifFirstWrong;
+                                func.call($(self), thischamp.elmt, thischamp);
+                            }
+                        }
+                    }
+                });
+
+                return ok;
+            };
+            
+            this.init();
+        }
+
+        return this.each(function(){
+            var self = this,
+                func,
+                controleOk,
+                method = $(self).attr('method'),
+                formObj = new controleForm(this);
+
+            if (typeof method == 'undefined' || method == null) {
+                method = 'post';
+            }
+
+            if (params.elmtEvents){
+                for (evnt in params.elmtEvents) {
+                    $.each(formObj.champs, function(ii, curChamp) {
+                        var curEvnt = evnt;
+                        curChamp.elmt.bind(curEvnt, function(e){
+                            params.elmtEvents[curEvnt].call(this, e, curChamp);
+                        });
+                    });
+                }
+            }
+
+            formObj.form.submit(function(event){
+                var data, 
+                    action;
+
+                if (isFunc(params.beforeCheck)) {
+                    func = params.beforeCheck;
+                    func.call(formObj.form, formObj);
+                }
+
+                controleOk = formObj.check();
+
+                if (controleOk) {
+                    if (isFunc(params.beforeSubmit)) {
+                        func = params.beforeSubmit;
+                        func.call(formObj.form, formObj);
+                    }
+
+                    if (params.ajax !== falsev) {
+                        action  = formObj.form.attr('action');
+                        data    = formObj.form.serialize();
+
+                        $.ajax({
+                            url         : action,
+                            data        : data,
+                            type        : method,
+                            dataType    : 'json',
+                            success     : function(response) {
+                                if (isFunc(params.afterSubmit)) {
+                                    func = params.afterSubmit;
+                                    func.call(formObj.form, response, formObj);
+                                }
+                            }
+                        });
+                    }
+                    else
+                        return truev;
+                }
+
+                event.preventDefault();
+                return falsev;
+            });
         });
+
+        function isFunc(func){
+            return $.isFunction(func);
+        };
 	};
 })(jQuery);
