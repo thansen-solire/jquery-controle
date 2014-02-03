@@ -7,8 +7,6 @@
         var falsev = !1,
             truev = !falsev,
             regularExpressions = {
-//                txt     : /^[a-zA-Zàáâãäåçèéêëìíîïðòóôõöùúûüýÿ\s]{2,}$/, // texte uniquement
-//                txt2    : /^[0-9a-zA-Zàáâãäåçèéêëìíîïðòóôõöùúûüýÿ\s]{2,}$/, // texte uniquement
                 num                 : /^[0-9]+$/, // chiffres et nombres uniquement
                 numnotnul           : /^[1-9]{1}|[0-9]{2,16}$/, // chiffres et nombres uniquement
                 tel                 : /^[\s\/\(\)\+\.0-9]{8,20}$/, // No tél
@@ -23,6 +21,11 @@
                 },
                 mix                 : function(value) {
                     return (value.length > 2);
+                },
+                atleastonechecked   : function(value, elmt){
+                    var name = elmt.attr('name'),
+                        number = $('input[name="' + name + '"]:checked', this).length;
+                    return (number > 0);
                 }
             },
             defaults = {
@@ -217,5 +220,5 @@
         function isFunc(func){
             return $.isFunction(func);
         };
-	};
+    };
 })(jQuery);
