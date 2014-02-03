@@ -1,0 +1,13 @@
+{
+  "name": "jquery controle",
+  "version": "1.0.0",
+  "main": "jquery.controle.js",
+  "author": "thansen",
+  "dependencies": {
+    "jquery": ">=1.5"
+  },
+  "ignore": [
+    "nbproject",
+    ".gitignore"
+  ]
+}
