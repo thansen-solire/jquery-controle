@@ -54,7 +54,7 @@
         params = $.extend(defaults, params);
         params.elmtEvents = events;
 
-        function controleChamp(form, elmt) 
+        function controleChamp(form, elmt)
         {
             this.form = $(form);
             this.elmt = $(elmt);
@@ -66,7 +66,8 @@
                     value,
                     expcourrante,
                     index0,
-                    func;
+                    func,
+                    regexps;
 
                 if (isFunc(params.beforeElmtCheck)) {
                     func = params.beforeElmtCheck;
@@ -97,7 +98,17 @@
                     if (isFunc(expcourrante)) {
                         testdonnee = expcourrante.call(this.form, value, this.elmt, this);
                     } else {
-                        testdonnee = expcourrante.test(value);
+                        if (!$.isArray(expcourrante)) {
+                            regexps = [expcourrante];
+                        } else {
+                            regexps = expcourrante;
+                        }
+
+                        $.each(regexps, function(ii, regexp) {
+                            if (testdonnee) {
+                                testdonnee = regexp.test(value);
+                            }
+                        });
                     }
                 }
 
@@ -127,7 +138,7 @@
                 var self = this;
                 $(params.controlHandler, this.form).each(function(){
                     self.champs.push(new controleChamp(this.form, this));
-                });                    
+                });
             };
             this.check = function(){
                 var ok = truev;
@@ -148,7 +159,7 @@
 
                 return ok;
             };
-            
+
             this.init();
         }
 
@@ -175,7 +186,7 @@
             }
 
             formObj.form.submit(function(event){
-                var data, 
+                var data,
                     action;
 
                 if (isFunc(params.beforeCheck)) {
