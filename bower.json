@@ -1,6 +1,5 @@
 {
-  "name": "jquery controle",
-  "version": "1.0.5",
+  "name": "jquery-controle",
   "main": "jquery.controle.js",
   "author": "thansen",
   "dependencies": {
