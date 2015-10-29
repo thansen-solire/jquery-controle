@@ -199,7 +199,11 @@
                 if (controleOk) {
                     if (isFunc(params.beforeSubmit)) {
                         func = params.beforeSubmit;
-                        func.call(formObj.form, formObj);
+                        if (typeof func.call(formObj.form, formObj) != 'undefined'
+                            && func.call(formObj.form, formObj) === false
+                        ) {
+                            return false;
+                        }
                     }
 
                     if (params.ajax !== falsev) {
