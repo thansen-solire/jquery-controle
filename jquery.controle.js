@@ -89,7 +89,7 @@
                     return truev;
                 }
 
-                oblig       = classes[index0 + 1] == 'form-oblig' || value != '';
+                oblig       = classes[index0 + 1] == 'form-oblig' || value != '' && value != 0;
                 typeDonnee  = classes[index0 + 2].replace('form-', '');
 
                 if(oblig && typeDonnee in regularExpressions){
