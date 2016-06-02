@@ -136,6 +136,8 @@
             this.champs = [];
             this.init = function(){
                 var self = this;
+
+                self.champs = [];
                 $(params.controlHandler, this.form).each(function(){
                     self.champs.push(new controleChamp(this.form, this));
                 });
@@ -188,6 +190,8 @@
             formObj.form.submit(function(event){
                 var data,
                     action;
+
+                formObj.init();
 
                 if (isFunc(params.beforeCheck)) {
                     func = params.beforeCheck;
